@@ -1,0 +1,117 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
+  --success: #16a34a;
+  --danger: #dc2626;
+  --warning: #d97706;
+  --secondary: #6b7280;
+  --bg: #f3f4f6;
+  --card-bg: #ffffff;
+  --border: #e5e7eb;
+  --text: #111827;
+  --text-muted: #6b7280;
+}
+
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
+
+/* Navbar */
+.navbar { display: flex; align-items: center; background: var(--primary); color: white; padding: 0 24px; height: 56px; gap: 24px; }
+.navbar-brand { font-size: 18px; font-weight: 700; }
+.navbar-links { display: flex; gap: 16px; flex: 1; }
+.navbar-links a { color: rgba(255,255,255,0.85); text-decoration: none; font-size: 14px; }
+.navbar-links a:hover { color: white; }
+.navbar-user { display: flex; align-items: center; gap: 12px; }
+.navbar-user span { font-size: 14px; }
+
+/* Auth */
+.auth-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg); }
+.auth-card { background: var(--card-bg); padding: 40px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+.auth-card h2 { text-align: center; margin-bottom: 24px; font-size: 22px; }
+
+/* Page */
+.page { padding: 24px; max-width: 1200px; margin: 0 auto; }
+.page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.page h2 { margin-bottom: 20px; font-size: 20px; }
+.page h3 { margin: 24px 0 12px; font-size: 16px; }
+
+/* Forms */
+.form-card { background: var(--card-bg); padding: 24px; border-radius: 8px; border: 1px solid var(--border); max-width: 600px; }
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-weight: 500; margin-bottom: 6px; font-size: 13px; }
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; background: white;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--primary); }
+.form-group small { color: var(--text-muted); font-size: 12px; margin-top: 4px; display: block; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px; }
+.form-inline { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; max-width: 100%; }
+.form-inline .form-group { margin-bottom: 0; }
+.checkbox-group { display: flex; gap: 16px; }
+.checkbox-label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: normal; }
+
+/* Buttons */
+.btn { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 14px; font-weight: 500; transition: opacity 0.15s; }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn:hover:not(:disabled) { opacity: 0.85; }
+.btn-primary { background: var(--primary); color: white; }
+.btn-secondary { background: var(--secondary); color: white; }
+.btn-success { background: var(--success); color: white; }
+.btn-danger { background: var(--danger); color: white; }
+.btn-full { width: 100%; }
+.btn-sm { padding: 4px 10px; font-size: 12px; margin-right: 6px; }
+
+/* Table */
+.table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.07); }
+.table th { background: #f9fafb; padding: 10px 14px; text-align: left; font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+.table td { padding: 10px 14px; border-bottom: 1px solid var(--border); }
+.table tr:last-child td { border-bottom: none; }
+.table tr:hover td { background: #f9fafb; }
+.row-holiday td { background: #fef2f2; }
+.text-center { text-align: center; color: var(--text-muted); }
+
+/* Badges */
+.badge { padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+.badge-warning { background: #fef3c7; color: #92400e; }
+.badge-success { background: #d1fae5; color: #065f46; }
+.badge-danger { background: #fee2e2; color: #991b1b; }
+.badge-secondary { background: #f3f4f6; color: #374151; }
+
+/* Filters */
+.filters { display: flex; gap: 12px; margin-bottom: 16px; }
+.filters select, .filters input { padding: 7px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; background: white; }
+
+/* Pagination */
+.pagination { display: flex; align-items: center; gap: 12px; margin-top: 16px; justify-content: flex-end; }
+.pagination span { font-size: 13px; color: var(--text-muted); }
+
+/* Balance Cards */
+.balance-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+.balance-card { background: var(--card-bg); padding: 20px; border-radius: 8px; border: 1px solid var(--border); }
+.balance-card h4 { font-size: 14px; color: var(--text-muted); margin-bottom: 12px; }
+.balance-stats { display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+.remaining { color: var(--success); font-weight: 600; }
+
+/* Detail Card */
+.detail-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 20px; max-width: 600px; margin-bottom: 24px; }
+.detail-row { display: flex; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.detail-row:last-child { border-bottom: none; }
+.detail-row label { width: 160px; font-weight: 500; color: var(--text-muted); font-size: 13px; flex-shrink: 0; }
+.detail-row span { flex: 1; }
+
+/* Activity Timeline */
+.activity-timeline { display: flex; flex-direction: column; gap: 12px; max-width: 600px; }
+.activity-item { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
+.activity-action { font-weight: 600; font-size: 13px; text-transform: uppercase; color: var(--primary); margin-bottom: 6px; }
+.activity-meta { display: flex; gap: 16px; font-size: 12px; color: var(--text-muted); }
+.activity-remarks { margin-top: 8px; font-size: 13px; color: var(--text); }
+
+/* Action Buttons */
+.action-buttons { display: flex; gap: 12px; margin-bottom: 20px; }
+
+/* Messages */
+.error { color: var(--danger); font-size: 13px; margin-top: 8px; }
+.success { color: var(--success); font-size: 13px; margin-top: 8px; }
+.loading { padding: 40px; text-align: center; color: var(--text-muted); }

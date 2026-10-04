@@ -1,0 +1,86 @@
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import api from '../../api/client';
+
+const LEAVE_TYPES = [
+  { id: 1, name: 'Casual Leave' },
+  { id: 2, name: 'Sick Leave' },
+  { id: 3, name: 'Earned Leave' },
+];
+
+export default function ApplyLeave() {
+  const navigate = useNavigate();
+  const [form, setForm] = useState({ leave_type_id: '', start_date: '', end_date: '', reason: '' });
+  const [balances, setBalances] = useState([]);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    api.get('/leave-balances').then((res) => setBalances(res.data));
+  }, []);
+
+  const selectedBalance = balances.find(
+    (b) => b.leave_type === LEAVE_TYPES.find((t) => t.id === Number(form.leave_type_id))?.name
+  );
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError(''); setSuccess('');
+    setLoading(true);
+    try {
+      const res = await api.post('/leave-requests', {
+        ...form,
+        leave_type_id: Number(form.leave_type_id),
+      });
+      setSuccess(`Leave request submitted. Ticket: ${res.data.ticket_number} (${res.data.leave_days} working days)`);
+      setForm({ leave_type_id: '', start_date: '', end_date: '', reason: '' });
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to submit request');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="page">
+      <h2>Apply for Leave</h2>
+      <form onSubmit={handleSubmit} className="form-card">
+        <div className="form-group">
+          <label>Leave Type</label>
+          <select required value={form.leave_type_id} onChange={(e) => setForm({ ...form, leave_type_id: e.target.value })}>
+            <option value="">Select leave type</option>
+            {LEAVE_TYPES.map((t) => (
+              <option key={t.id} value={t.id}>{t.name}</option>
+            ))}
+          </select>
+          {selectedBalance && (
+            <small>Available: {selectedBalance.remaining_days} days</small>
+          )}
+        </div>
+        <div className="form-row">
+          <div className="form-group">
+            <label>Start Date</label>
+            <input type="date" required value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} />
+          </div>
+          <div className="form-group">
+            <label>End Date</label>
+            <input type="date" required value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} />
+          </div>
+        </div>
+        <div className="form-group">
+          <label>Reason</label>
+          <textarea required rows={3} value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })} />
+        </div>
+        {error && <p className="error">{error}</p>}
+        {success && <p className="success">{success}</p>}
+        <div className="form-actions">
+          <button type="button" className="btn btn-secondary" onClick={() => navigate('/my-requests')}>Cancel</button>
+          <button type="submit" className="btn btn-primary" disabled={loading}>
+            {loading ? 'Submitting...' : 'Submit Request'}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
