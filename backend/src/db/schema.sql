@@ -15,12 +15,13 @@ CREATE TABLE IF NOT EXISTS users (
   name VARCHAR(100) NOT NULL,
   email VARCHAR(150) NOT NULL UNIQUE,
   password VARCHAR(255) NOT NULL,
-  role ENUM('employee','manager','admin') NOT NULL DEFAULT 'employee',
-  roleset JSON NOT NULL DEFAULT ('["employee"]'),
+  role INT NOT NULL,
+  roleset JSON NOT NULL,
   manager_id INT DEFAULT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  deleted_at TIMESTAMP DEFAULT NULL,
+  deleted_at TIMESTAMP NULL DEFAULT NULL,
+  CONSTRAINT fk_users_role FOREIGN KEY (role) REFERENCES roles(id),
   CONSTRAINT fk_users_manager FOREIGN KEY (manager_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
@@ -30,20 +31,19 @@ CREATE TABLE IF NOT EXISTS leave_types (
   annual_allocation INT NOT NULL DEFAULT 12,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  deleted_at TIMESTAMP DEFAULT NULL
+  deleted_at TIMESTAMP NULL DEFAULT NULL
 );
 
 CREATE TABLE IF NOT EXISTS leave_balances (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT NOT NULL,
-  leave_type_id INT NOT NULL,
-  allocated_days INT NOT NULL DEFAULT 0,
-  used_days INT NOT NULL DEFAULT 0,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  UNIQUE KEY uq_user_leave_type (user_id, leave_type_id),
-  CONSTRAINT fk_lb_user FOREIGN KEY (user_id) REFERENCES users(id),
-  CONSTRAINT fk_lb_leave_type FOREIGN KEY (leave_type_id) REFERENCES leave_types(id)
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    leave_type_id INT NOT NULL,
+    used_days INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_user_leave_type (user_id, leave_type_id),
+    CONSTRAINT fk_lb_user FOREIGN KEY (user_id) REFERENCES users(id),
+    CONSTRAINT fk_lb_leave_type FOREIGN KEY (leave_type_id) REFERENCES leave_types(id)
 );
 
 CREATE TABLE IF NOT EXISTS calendar (
@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS leave_requests (
   reason TEXT NOT NULL,
   status ENUM('PENDING','APPROVED','REJECTED','CANCELLED') NOT NULL DEFAULT 'PENDING',
   reviewed_by INT DEFAULT NULL,
-  reviewed_at TIMESTAMP DEFAULT NULL,
+  reviewed_at TIMESTAMP NULL DEFAULT NULL,
   rejection_reason TEXT DEFAULT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
