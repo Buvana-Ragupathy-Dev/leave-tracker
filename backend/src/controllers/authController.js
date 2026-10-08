@@ -36,7 +36,11 @@ async function getMe(req, res) {
     [req.user.id]
   );
   if (!user) return res.status(404).json({ message: 'User not found' });
-  user.roleset = typeof user.roleset === 'string' ? JSON.parse(user.roleset) : user.roleset;
+  const roleIds = typeof user.roleset === 'string' ? JSON.parse(user.roleset) : user.roleset;
+  const [roleRows] = await db.query('SELECT id, name FROM roles WHERE id IN (?)', [roleIds]);
+  const roleMap = {};
+  roleRows.forEach(r => { roleMap[r.id] = r.name; });
+  user.roleset = roleIds.map(id => roleMap[id]).filter(Boolean);
   res.json(user);
 }
 
