@@ -49,6 +49,25 @@ export default function AdminCalendar() {
 
   return (
     <div className="page">
+      <h3>Add Holiday / Special Day</h3>
+      <form onSubmit={handleCreate} className="form-card form-inline">
+        <div className="form-group">
+          <label>Date</label>
+          <input type="date" required value={newEntry.calendar_date} onChange={(e) => setNewEntry({ ...newEntry, calendar_date: e.target.value })} />
+        </div>
+        <div className="form-group">
+          <label>Working Day</label>
+          <select value={newEntry.is_working_day} onChange={(e) => setNewEntry({ ...newEntry, is_working_day: Number(e.target.value) })}>
+            <option value={0}>No (Holiday)</option>
+            <option value={1}>Yes (Working)</option>
+          </select>
+        </div>
+        <div className="form-group">
+          <label>Description</label>
+          <input type="text" value={newEntry.description} onChange={(e) => setNewEntry({ ...newEntry, description: e.target.value })} />
+        </div>
+        <button type="submit" className="btn btn-primary">Add Entry</button>
+      </form>
       <h2>Working Day / Holiday Calendar</h2>
       <div className="filters">
         <select value={year} onChange={(e) => setYear(Number(e.target.value))}>
@@ -97,25 +116,6 @@ export default function AdminCalendar() {
           ))}
         </tbody>
       </table>
-      <h3>Add Holiday / Special Day</h3>
-      <form onSubmit={handleCreate} className="form-card form-inline">
-        <div className="form-group">
-          <label>Date</label>
-          <input type="date" required value={newEntry.calendar_date} onChange={(e) => setNewEntry({ ...newEntry, calendar_date: e.target.value })} />
-        </div>
-        <div className="form-group">
-          <label>Working Day</label>
-          <select value={newEntry.is_working_day} onChange={(e) => setNewEntry({ ...newEntry, is_working_day: Number(e.target.value) })}>
-            <option value={0}>No (Holiday)</option>
-            <option value={1}>Yes (Working)</option>
-          </select>
-        </div>
-        <div className="form-group">
-          <label>Description</label>
-          <input type="text" value={newEntry.description} onChange={(e) => setNewEntry({ ...newEntry, description: e.target.value })} />
-        </div>
-        <button type="submit" className="btn btn-primary">Add Entry</button>
-      </form>
     </div>
   );
 }

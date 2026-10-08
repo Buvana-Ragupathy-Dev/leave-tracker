@@ -2,8 +2,8 @@ const db = require('../config/db');
 
 async function getLeaveBalances(req, res) {
   const [rows] = await db.query(
-    `SELECT lt.name AS leave_type, lb.allocated_days, lb.used_days,
-            (lb.allocated_days - lb.used_days) AS remaining_days
+    `SELECT lt.name AS leave_type, lt.annual_allocation AS allocated_days, lb.used_days,
+            (lt.annual_allocation - lb.used_days) AS remaining_days
      FROM leave_balances lb
      JOIN leave_types lt ON lt.id = lb.leave_type_id
      WHERE lb.user_id = ? AND lt.deleted_at IS NULL`,
@@ -64,8 +64,10 @@ async function createLeaveRequest(req, res) {
 
   // Check balance
   const [[balance]] = await db.query(
-    `SELECT allocated_days - used_days AS remaining FROM leave_balances
-     WHERE user_id = ? AND leave_type_id = ?`,
+    `SELECT (lt.annual_allocation - lb.used_days) AS remaining
+     FROM leave_balances lb
+     JOIN leave_types lt ON lt.id = lb.leave_type_id
+     WHERE lb.user_id = ? AND lb.leave_type_id = ?`,
     [req.user.id, leave_type_id]
   );
   if (!balance) return res.status(400).json({ message: 'Leave type not found for this employee' });

@@ -105,7 +105,7 @@ async function updateEmployeeManager(req, res) {
 
   if (manager_id !== null && manager_id !== undefined) {
     const [[mgr]] = await db.query(
-      `SELECT id FROM users WHERE id = ? AND deleted_at IS NULL AND JSON_CONTAINS(roleset, '"manager"')`,
+      `SELECT id FROM users WHERE id = ? AND deleted_at IS NULL AND JSON_CONTAINS(roleset, '2', '$')`,
       [manager_id]
     );
     if (!mgr) return res.status(400).json({ message: 'Invalid manager: user not found or does not have manager role' });
@@ -140,10 +140,11 @@ async function createCalendarEntry(req, res) {
     return res.status(400).json({ message: 'calendar_date and is_working_day are required' });
 
   await db.query(
-    'INSERT INTO calendar (calendar_date, is_working_day, description) VALUES (?, ?, ?)',
+    `INSERT INTO calendar (calendar_date, is_working_day, description) VALUES (?, ?, ?)
+     ON DUPLICATE KEY UPDATE is_working_day = VALUES(is_working_day), description = VALUES(description), updated_at = NOW()`,
     [calendar_date, is_working_day, description ?? null]
   );
-  res.status(201).json({ message: 'Calendar entry created' });
+  res.status(201).json({ message: 'Calendar entry saved' });
 }
 
 async function updateCalendarEntry(req, res) {
