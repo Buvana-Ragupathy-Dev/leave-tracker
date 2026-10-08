@@ -15,7 +15,12 @@ async function login(req, res) {
   const valid = await bcrypt.compare(password, user.password);
   if (!valid) return res.status(401).json({ message: 'Invalid credentials' });
 
-  const roleset = typeof user.roleset === 'string' ? JSON.parse(user.roleset) : user.roleset;
+  const roleIds = typeof user.roleset === 'string' ? JSON.parse(user.roleset) : user.roleset;
+  const [roleRows] = await db.query('SELECT id, name FROM roles WHERE id IN (?)', [roleIds]);
+  const roleMap = {};
+  roleRows.forEach(r => { roleMap[r.id] = r.name; });
+  const roleset = roleIds.map(id => roleMap[id]).filter(Boolean);
+
   const token = jwt.sign(
     { id: user.id, name: user.name, email: user.email, role: user.role, roleset },
     process.env.JWT_SECRET,
