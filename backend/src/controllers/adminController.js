@@ -149,7 +149,7 @@ async function getCalendar(req, res) {
     params.push(year);
   }
   const [rows] = await db.query(
-    `SELECT id, calendar_date, is_working_day, description FROM calendar ${where} ORDER BY calendar_date ASC`,
+    `SELECT id, DATE_FORMAT(calendar_date, '%Y-%m-%d') AS calendar_date, is_working_day, description FROM calendar ${where} ORDER BY calendar_date ASC`,
     params
   );
   res.json(rows);

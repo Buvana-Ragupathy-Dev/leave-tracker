@@ -15,12 +15,13 @@ export default function AdminEditEmployee() {
       const all = res.data.data;
       const emp = all.find((e) => String(e.id) === String(id));
       if (emp) {
-        // roleset is already name strings from backend (e.g. ['employee','manager'])
         const rs = typeof emp.roleset === 'string' ? JSON.parse(emp.roleset) : (emp.roleset || []);
+        const role = emp.role;
+        const roleset = rs.includes(role) ? rs : [role, ...rs];
         setForm({
           name: emp.name,
           role: emp.role,           // already a name string from backend
-          roleset: rs,
+          roleset,
           manager_id: emp.manager_id ? String(emp.manager_id) : '',
         });
       }
@@ -52,11 +53,20 @@ export default function AdminEditEmployee() {
 
   // Toggle: add if not present, remove if present — no duplicates
   const toggleRole = (role) => {
+    setForm((f) => {
+      if (role === f.role) return f; // primary role cannot be unchecked
+      const roleset = f.roleset.includes(role)
+        ? f.roleset.filter((r) => r !== role)
+        : [...f.roleset, role];
+      return { ...f, roleset };
+    });
+  };
+
+  const handleRoleChange = (newRole) => {
     setForm((f) => ({
       ...f,
-      roleset: f.roleset.includes(role)
-        ? f.roleset.filter((r) => r !== role)
-        : [...f.roleset, role],
+      role: newRole,
+      roleset: f.roleset.includes(newRole) ? f.roleset : [...f.roleset, newRole],
     }));
   };
 
@@ -73,7 +83,7 @@ export default function AdminEditEmployee() {
         </div>
         <div className="form-group">
           <label>Primary Role</label>
-          <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
+          <select value={form.role} onChange={(e) => handleRoleChange(e.target.value)}>
             <option value="employee">Employee</option>
             <option value="manager">Manager</option>
             <option value="admin">Admin</option>
@@ -94,7 +104,7 @@ export default function AdminEditEmployee() {
             ))}
           </div>
         </div>
-        {form.roleset.includes('employee') && (
+        {(form.role === 'employee' || form.roleset.includes('employee')) && (
           <div className="form-group">
             <label>Manager</label>
             <select value={form.manager_id} onChange={(e) => setForm({ ...form, manager_id: e.target.value })}>

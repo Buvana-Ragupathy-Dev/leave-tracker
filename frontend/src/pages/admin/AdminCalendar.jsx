@@ -48,6 +48,9 @@ export default function AdminCalendar() {
 
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
+  // Parse YYYY-MM-DD as local date to avoid UTC timezone shift
+  const parseLocal = (d) => { const [y,m,day] = d.slice(0,10).split('-').map(Number); return new Date(y, m-1, day); };
+
   return (
     <div className="page">
       <h3>Add Holiday / Special Day</h3>
@@ -87,8 +90,8 @@ export default function AdminCalendar() {
         <tbody>
           {entries.map((e) => (
             <tr key={e.id} className={!e.is_working_day ? 'row-holiday' : ''}>
-              <td>{e.calendar_date?.slice(0,10)}</td>
-              <td>{new Date(e.calendar_date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short' })}</td>
+              <td>{parseLocal(e.calendar_date).toLocaleDateString('en-CA')}</td>
+              <td>{parseLocal(e.calendar_date).toLocaleDateString('en-US', { weekday: 'short' })}</td>
               <td>
                 {editId === e.id ? (
                   <select value={editForm.is_working_day} onChange={(ev) => setEditForm({ ...editForm, is_working_day: Number(ev.target.value) })}>
