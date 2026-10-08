@@ -61,7 +61,7 @@ export default function Navbar({ routeRole, activeLink }) {
           </select>
         )}
         {!multiRole && <span className="role-badge">{ROLE_LABELS[activeRole] || activeRole}</span>}
-        <button onClick={handleLogout}>Logout</button>
+        <button className="btn-logout" onClick={handleLogout}>Logout</button>
       </div>
     </nav>
   );

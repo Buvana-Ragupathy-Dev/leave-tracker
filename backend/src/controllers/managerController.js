@@ -103,4 +103,23 @@ async function rejectRequest(req, res) {
   res.json({ message: 'Leave request rejected' });
 }
 
-module.exports = { getAssignedRequests, getAssignedRequestById, approveRequest, rejectRequest };
+
+async function getRequestActivities(req, res) {
+  const { id } = req.params;
+  const [[lr]] = await db.query(
+    'SELECT id FROM leave_requests WHERE id = ? AND assigned_manager_id = ?',
+    [id, req.user.id]
+  );
+  if (!lr) return res.status(404).json({ message: 'Leave request not found or not assigned to you' });
+  const [activities] = await db.query(
+    `SELECT la.action, u.name AS performed_by, la.remarks, la.created_at
+     FROM leave_activities la
+     JOIN users u ON u.id = la.performed_by
+     WHERE la.leave_request_id = ?
+     ORDER BY la.created_at ASC`,
+    [id]
+  );
+  res.json(activities);
+}
+
+module.exports = { getAssignedRequests, getAssignedRequestById, approveRequest, rejectRequest, getRequestActivities };

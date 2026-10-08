@@ -8,12 +8,17 @@ export default function ManagerRequestDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [request, setRequest] = useState(null);
+  const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get(`/manager/leave-requests/${id}`)
-      .then((res) => setRequest(res.data))
-      .finally(() => setLoading(false));
+    Promise.all([
+      api.get(`/manager/leave-requests/${id}`),
+      api.get(`/manager/leave-requests/${id}/activities`),
+    ]).then(([reqRes, actRes]) => {
+      setRequest(reqRes.data);
+      setActivities(actRes.data);
+    }).finally(() => setLoading(false));
   }, [id]);
 
   const handleApprove = async () => {
@@ -88,6 +93,20 @@ export default function ManagerRequestDetail() {
           <button className="btn btn-danger" onClick={handleReject}>Reject</button>
         </div>
       )}
+
+      <h3>Activity History</h3>
+      <div className="activity-timeline">
+        {activities.map((a, i) => (
+          <div key={i} className="activity-item">
+            <div className="activity-action">{a.action}</div>
+            <div className="activity-meta">
+              <span>By: {a.performed_by}</span>
+              <span>{new Date(a.created_at).toLocaleString()}</span>
+            </div>
+            {a.remarks && <div className="activity-remarks">{a.remarks}</div>}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
