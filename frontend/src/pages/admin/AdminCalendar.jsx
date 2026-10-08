@@ -88,7 +88,7 @@ export default function AdminCalendar() {
           {entries.map((e) => (
             <tr key={e.id} className={!e.is_working_day ? 'row-holiday' : ''}>
               <td>{e.calendar_date?.slice(0,10)}</td>
-              <td>{new Date(e.calendar_date).toLocaleDateString('en-US', { weekday: 'short' })}</td>
+              <td>{new Date(e.calendar_date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short' })}</td>
               <td>
                 {editId === e.id ? (
                   <select value={editForm.is_working_day} onChange={(ev) => setEditForm({ ...editForm, is_working_day: Number(ev.target.value) })}>

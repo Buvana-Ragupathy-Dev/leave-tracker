@@ -116,3 +116,29 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .error { color: var(--danger); font-size: 13px; margin-top: 8px; }
 .success { color: var(--success); font-size: 13px; margin-top: 8px; }
 .loading { padding: 40px; text-align: center; color: var(--text-muted); }
+
+/* Loading Overlay */
+.loading-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999; pointer-events: all;
+}
+.loading-spinner {
+  width: 44px; height: 44px;
+  border: 4px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Role Switcher */
+.role-switcher {
+  padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.4);
+  background: rgba(255,255,255,0.15); color: white; font-size: 13px; cursor: pointer;
+}
+.role-switcher option { background: #1d4ed8; color: white; }
+.role-badge {
+  padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;
+  background: rgba(255,255,255,0.2); color: white;
+}

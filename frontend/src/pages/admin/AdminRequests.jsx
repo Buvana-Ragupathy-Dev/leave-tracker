@@ -10,22 +10,32 @@ export default function AdminRequests() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState('');
+  const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(false);
   const limit = 10;
 
   useEffect(() => {
+    setLoading(true);
     const params = { page, limit };
     if (statusFilter) params.status = statusFilter;
+    if (search) params.search = search;
     api.get('/admin/leave-requests', { params })
-      .then((res) => { setRequests(res.data.data); setTotal(res.data.total); });
-  }, [page, statusFilter]);
+      .then((res) => { setRequests(res.data.data); setTotal(res.data.total); })
+      .finally(() => setLoading(false));
+  }, [page, statusFilter, search]);
 
   return (
     <div className="page">
+      {loading && <div className="loading-overlay"><div className="loading-spinner" /></div>}
       <h2>All Leave Requests</h2>
       <div className="filters">
+        <input
+          type="text" placeholder="Search by employee or ticket..."
+          value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+        />
         <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}>
           <option value="">All Statuses</option>
-          {['PENDING','APPROVED','REJECTED','CANCELLED'].map((s) => (
+          {['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'].map((s) => (
             <option key={s} value={s}>{s}</option>
           ))}
         </select>
@@ -43,8 +53,8 @@ export default function AdminRequests() {
               <td>{r.ticket_number}</td>
               <td>{r.employee_name}</td>
               <td>{r.leave_type}</td>
-              <td>{r.start_date?.slice(0,10)}</td>
-              <td>{r.end_date?.slice(0,10)}</td>
+              <td>{r.start_date?.slice(0, 10)}</td>
+              <td>{r.end_date?.slice(0, 10)}</td>
               <td>{r.leave_days}</td>
               <td><span className={`badge ${STATUS_COLORS[r.status]}`}>{r.status}</span></td>
               <td>

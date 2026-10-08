@@ -13,6 +13,7 @@ export default function ApplyLeave() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ leave_type_id: '', start_date: '', end_date: '', reason: '' });
   const [balances, setBalances] = useState([]);
+  const [leaveDays, setLeaveDays] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
@@ -20,6 +21,17 @@ export default function ApplyLeave() {
   useEffect(() => {
     api.get('/leave-balances').then((res) => setBalances(res.data));
   }, []);
+
+  // Fetch working days preview whenever dates change
+  useEffect(() => {
+    if (form.start_date && form.end_date && form.end_date >= form.start_date) {
+      api.get('/leave-days-preview', { params: { start_date: form.start_date, end_date: form.end_date } })
+        .then((res) => setLeaveDays(res.data.leave_days))
+        .catch(() => setLeaveDays(null));
+    } else {
+      setLeaveDays(null);
+    }
+  }, [form.start_date, form.end_date]);
 
   const selectedBalance = balances.find(
     (b) => b.leave_type === LEAVE_TYPES.find((t) => t.id === Number(form.leave_type_id))?.name
@@ -69,6 +81,13 @@ export default function ApplyLeave() {
             <input type="date" required value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} />
           </div>
         </div>
+        {leaveDays !== null && (
+          <div className="form-group">
+            <small style={{ color: leaveDays === 0 ? 'var(--danger)' : 'var(--success)', fontWeight: 600 }}>
+              {leaveDays === 0 ? 'No working days in selected range' : `Working days: ${leaveDays}`}
+            </small>
+          </div>
+        )}
         <div className="form-group">
           <label>Reason</label>
           <textarea required rows={3} value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })} />

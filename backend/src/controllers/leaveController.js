@@ -13,11 +13,12 @@ async function getLeaveBalances(req, res) {
 }
 
 async function getLeaveRequests(req, res) {
-  const { status, page = 1, limit = 10 } = req.query;
+  const { status, search, page = 1, limit = 10 } = req.query;
   const offset = (page - 1) * limit;
   const params = [req.user.id];
   let where = 'lr.user_id = ?';
   if (status) { where += ' AND lr.status = ?'; params.push(status); }
+  if (search) { where += ' AND lr.ticket_number LIKE ?'; params.push(`%${search}%`); }
 
   const [rows] = await db.query(
     `SELECT lr.id, lr.ticket_number, lt.name AS leave_type, lr.start_date, lr.end_date,
@@ -74,9 +75,13 @@ async function createLeaveRequest(req, res) {
   if (balance.remaining < leave_days)
     return res.status(400).json({ message: `Insufficient leave balance. Available: ${balance.remaining}, Requested: ${leave_days}` });
 
-  // Get assigned manager
+  // Get assigned manager — fallback to rahul.verma@company.com if none
   const [[emp]] = await db.query('SELECT manager_id FROM users WHERE id = ?', [req.user.id]);
-  const assigned_manager_id = emp?.manager_id ?? null;
+  let assigned_manager_id = emp?.manager_id ?? null;
+  if (!assigned_manager_id) {
+    const [[defaultMgr]] = await db.query('SELECT id FROM users WHERE email = ? AND deleted_at IS NULL', ['rahul.verma@company.com']);
+    assigned_manager_id = defaultMgr?.id ?? null;
+  }
 
   // Generate ticket: e.g. CL-05/2026-00000001
   const [[lt]] = await db.query('SELECT name FROM leave_types WHERE id = ?', [leave_type_id]);
@@ -151,4 +156,14 @@ async function getLeaveActivities(req, res) {
   res.json(rows);
 }
 
-module.exports = { getLeaveBalances, getLeaveRequests, createLeaveRequest, cancelLeaveRequest, getLeaveActivities };
+async function getLeaveDaysPreview(req, res) {
+  const { start_date, end_date } = req.query;
+  if (!start_date || !end_date) return res.status(400).json({ message: 'start_date and end_date required' });
+  const [[{ leave_days }]] = await db.query(
+    `SELECT COUNT(*) AS leave_days FROM calendar WHERE calendar_date BETWEEN ? AND ? AND is_working_day = 1`,
+    [start_date, end_date]
+  );
+  res.json({ leave_days });
+}
+
+module.exports = { getLeaveBalances, getLeaveRequests, createLeaveRequest, cancelLeaveRequest, getLeaveActivities, getLeaveDaysPreview };

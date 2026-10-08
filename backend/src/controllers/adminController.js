@@ -2,12 +2,13 @@ const db = require('../config/db');
 
 // --- Leave Requests ---
 async function getAllLeaveRequests(req, res) {
-  const { status, user_id, page = 1, limit = 10 } = req.query;
+  const { status, user_id, search, page = 1, limit = 10 } = req.query;
   const offset = (page - 1) * limit;
   const params = [];
   const conditions = [];
   if (status) { conditions.push('lr.status = ?'); params.push(status); }
   if (user_id) { conditions.push('lr.user_id = ?'); params.push(user_id); }
+  if (search) { conditions.push('(u.name LIKE ? OR lr.ticket_number LIKE ?)'); params.push(`%${search}%`, `%${search}%`); }
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
   const [rows] = await db.query(
@@ -22,7 +23,9 @@ async function getAllLeaveRequests(req, res) {
     [...params, Number(limit), Number(offset)]
   );
   const [[{ total }]] = await db.query(
-    `SELECT COUNT(*) AS total FROM leave_requests lr ${where}`, params
+    `SELECT COUNT(*) AS total FROM leave_requests lr
+     JOIN users u ON u.id = lr.user_id
+     ${where}`, params
   );
   res.json({ data: rows, total, page: Number(page), limit: Number(limit) });
 }
@@ -56,6 +59,8 @@ async function getLeaveRequestActivities(req, res) {
 }
 
 // --- Employees ---
+const ROLE_NAMES = { 1: 'employee', 2: 'manager', 3: 'admin' };
+
 async function getEmployees(req, res) {
   const { search, page = 1, limit = 10 } = req.query;
   const offset = (page - 1) * limit;
@@ -64,7 +69,7 @@ async function getEmployees(req, res) {
   if (search) { where += ' AND (u.name LIKE ? OR u.email LIKE ?)'; params.push(`%${search}%`, `%${search}%`); }
 
   const [rows] = await db.query(
-    `SELECT u.id, u.name, u.email, u.role, u.roleset, m.name AS manager_name, u.created_at
+    `SELECT u.id, u.name, u.email, u.role, u.roleset, u.manager_id, m.name AS manager_name, u.created_at
      FROM users u
      LEFT JOIN users m ON m.id = u.manager_id
      ${where}
@@ -75,7 +80,18 @@ async function getEmployees(req, res) {
   const [[{ total }]] = await db.query(
     `SELECT COUNT(*) AS total FROM users u ${where}`, params
   );
-  res.json({ data: rows, total, page: Number(page), limit: Number(limit) });
+
+  // Map numeric role/roleset to name strings
+  const mapped = rows.map((r) => {
+    const rsRaw = typeof r.roleset === 'string' ? JSON.parse(r.roleset) : (r.roleset || []);
+    return {
+      ...r,
+      role: ROLE_NAMES[r.role] || r.role,
+      roleset: rsRaw.map((id) => ROLE_NAMES[id] || id),
+    };
+  });
+
+  res.json({ data: mapped, total, page: Number(page), limit: Number(limit) });
 }
 
 async function updateEmployee(req, res) {
@@ -84,11 +100,16 @@ async function updateEmployee(req, res) {
   const [[emp]] = await db.query('SELECT id FROM users WHERE id = ? AND deleted_at IS NULL', [id]);
   if (!emp) return res.status(404).json({ message: 'Employee not found' });
 
+  const ROLE_IDS = { employee: 1, manager: 2, admin: 3 };
+
   const fields = [];
   const params = [];
   if (name) { fields.push('name = ?'); params.push(name); }
-  if (role) { fields.push('role = ?'); params.push(role); }
-  if (roleset) { fields.push('roleset = ?'); params.push(JSON.stringify(roleset)); }
+  if (role) { fields.push('role = ?'); params.push(ROLE_IDS[role] ?? role); }
+  if (roleset) {
+    const rolesetIds = roleset.map((r) => ROLE_IDS[r] ?? r);
+    fields.push('roleset = ?'); params.push(JSON.stringify(rolesetIds));
+  }
   if (!fields.length) return res.status(400).json({ message: 'No fields to update' });
 
   params.push(id);

@@ -20,7 +20,9 @@ async function getAssignedRequests(req, res) {
     [...params, Number(limit), Number(offset)]
   );
   const [[{ total }]] = await db.query(
-    `SELECT COUNT(*) AS total FROM leave_requests lr WHERE ${where}`, params
+    `SELECT COUNT(*) AS total FROM leave_requests lr
+     JOIN users u ON u.id = lr.user_id
+     WHERE ${where}`, params
   );
   res.json({ data: rows, total, page: Number(page), limit: Number(limit) });
 }

@@ -11,18 +11,22 @@ export default function ManagerRequests() {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState('PENDING');
   const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(false);
   const limit = 10;
 
   useEffect(() => {
+    setLoading(true);
     const params = { page, limit };
     if (statusFilter) params.status = statusFilter;
     if (search) params.search = search;
     api.get('/manager/leave-requests', { params })
-      .then((res) => { setRequests(res.data.data); setTotal(res.data.total); });
+      .then((res) => { setRequests(res.data.data); setTotal(res.data.total); })
+      .finally(() => setLoading(false));
   }, [page, statusFilter, search]);
 
   return (
     <div className="page">
+      {loading && <div className="loading-overlay"><div className="loading-spinner" /></div>}
       <h2>Team Leave Requests</h2>
       <div className="filters">
         <input

@@ -1,16 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 import api from '../../api/client';
-import { confirm, toast } from '../../utils/swal';
+import { toast } from '../../utils/swal';
 
 export default function ManagerRequestDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [request, setRequest] = useState(null);
-  const [approveRemarks, setApproveRemarks] = useState('');
-  const [rejectionReason, setRejectionReason] = useState('');
-  const [showRejectForm, setShowRejectForm] = useState(false);
-  const [showApproveForm, setShowApproveForm] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -19,12 +16,22 @@ export default function ManagerRequestDetail() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  const handleApprove = async (e) => {
-    e.preventDefault();
-    const result = await confirm('This will approve the leave request and deduct the balance.');
-    if (!result.isConfirmed) return;
+  const handleApprove = async () => {
+    const { value: remarks, isConfirmed } = await Swal.fire({
+      title: 'Approve Leave Request',
+      input: 'textarea',
+      inputLabel: 'Remarks (optional)',
+      inputPlaceholder: 'Add any remarks...',
+      inputAttributes: { rows: 3 },
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#16a34a',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Approve',
+    });
+    if (!isConfirmed) return;
     try {
-      await api.patch(`/manager/leave-requests/${id}/approve`, { remarks: approveRemarks || undefined });
+      await api.patch(`/manager/leave-requests/${id}/approve`, { remarks: remarks || undefined });
       toast('success', 'Leave request approved');
       navigate('/manager/requests');
     } catch (err) {
@@ -32,10 +39,23 @@ export default function ManagerRequestDetail() {
     }
   };
 
-  const handleReject = async (e) => {
-    e.preventDefault();
+  const handleReject = async () => {
+    const { value: rejection_reason, isConfirmed } = await Swal.fire({
+      title: 'Reject Leave Request',
+      input: 'textarea',
+      inputLabel: 'Rejection Reason (required)',
+      inputPlaceholder: 'State the reason for rejection...',
+      inputAttributes: { rows: 3 },
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Reject',
+      inputValidator: (value) => !value?.trim() && 'Rejection reason is required',
+    });
+    if (!isConfirmed) return;
     try {
-      await api.patch(`/manager/leave-requests/${id}/reject`, { rejection_reason: rejectionReason });
+      await api.patch(`/manager/leave-requests/${id}/reject`, { rejection_reason });
       toast('success', 'Leave request rejected');
       navigate('/manager/requests');
     } catch (err) {
@@ -50,13 +70,13 @@ export default function ManagerRequestDetail() {
     <div className="page">
       <div className="page-header">
         <h2>Leave Request — {request.ticket_number}</h2>
-        <button className="btn btn-secondary" onClick={() => navigate('/manager/requests')}>Back</button>
+        <button className="btn btn-secondary" onClick={() => navigate(-1)}>Back</button>
       </div>
       <div className="detail-card">
         <div className="detail-row"><label>Employee</label><span>{request.employee_name}</span></div>
         <div className="detail-row"><label>Leave Type</label><span>{request.leave_type}</span></div>
-        <div className="detail-row"><label>From</label><span>{request.start_date?.slice(0,10)}</span></div>
-        <div className="detail-row"><label>To</label><span>{request.end_date?.slice(0,10)}</span></div>
+        <div className="detail-row"><label>From</label><span>{request.start_date?.slice(0, 10)}</span></div>
+        <div className="detail-row"><label>To</label><span>{request.end_date?.slice(0, 10)}</span></div>
         <div className="detail-row"><label>Working Days</label><span>{request.leave_days}</span></div>
         <div className="detail-row"><label>Status</label><span className={`badge ${request.status === 'PENDING' ? 'badge-warning' : request.status === 'APPROVED' ? 'badge-success' : 'badge-danger'}`}>{request.status}</span></div>
         <div className="detail-row"><label>Reason</label><span>{request.reason}</span></div>
@@ -64,29 +84,9 @@ export default function ManagerRequestDetail() {
 
       {request.status === 'PENDING' && (
         <div className="action-buttons">
-          <button className="btn btn-success" onClick={() => { setShowApproveForm(!showApproveForm); setShowRejectForm(false); }}>Approve</button>
-          <button className="btn btn-danger" onClick={() => { setShowRejectForm(!showRejectForm); setShowApproveForm(false); }}>Reject</button>
+          <button className="btn btn-success" onClick={handleApprove}>Approve</button>
+          <button className="btn btn-danger" onClick={handleReject}>Reject</button>
         </div>
-      )}
-
-      {showApproveForm && (
-        <form onSubmit={handleApprove} className="form-card">
-          <div className="form-group">
-            <label>Remarks <small>(optional)</small></label>
-            <textarea rows={3} value={approveRemarks} onChange={(e) => setApproveRemarks(e.target.value)} placeholder="Add any remarks..." />
-          </div>
-          <button type="submit" className="btn btn-success">Confirm Approval</button>
-        </form>
-      )}
-
-      {showRejectForm && (
-        <form onSubmit={handleReject} className="form-card">
-          <div className="form-group">
-            <label>Rejection Reason <small>(required)</small></label>
-            <textarea required rows={3} value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} placeholder="State the reason for rejection..." />
-          </div>
-          <button type="submit" className="btn btn-danger">Confirm Rejection</button>
-        </form>
       )}
     </div>
   );

@@ -15,8 +15,9 @@ export default function Login() {
     setLoading(true);
     try {
       const user = await login(form.email, form.password);
+      // defaultRole priority: admin > manager > employee
       if (user.roleset?.includes('admin')) navigate('/admin/requests');
-      else if (user.roleset?.includes('manager') && !user.roleset?.includes('employee')) navigate('/manager/requests');
+      else if (user.roleset?.includes('manager')) navigate('/manager/requests');
       else navigate('/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed');

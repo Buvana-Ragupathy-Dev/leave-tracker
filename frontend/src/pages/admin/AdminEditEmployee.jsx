@@ -8,18 +8,33 @@ export default function AdminEditEmployee() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ name: '', role: '', roleset: [], manager_id: '' });
   const [managers, setManagers] = useState([]);
+  const [defaultManager, setDefaultManager] = useState(null);
 
   useEffect(() => {
     api.get('/admin/employees', { params: { limit: 100 } }).then((res) => {
-      const emp = res.data.data.find((e) => String(e.id) === String(id));
+      const all = res.data.data;
+      const emp = all.find((e) => String(e.id) === String(id));
       if (emp) {
-        const rs = typeof emp.roleset === 'string' ? JSON.parse(emp.roleset) : emp.roleset;
-        setForm({ name: emp.name, role: emp.role, roleset: rs, manager_id: emp.manager_id || '' });
+        // roleset is already name strings from backend (e.g. ['employee','manager'])
+        const rs = typeof emp.roleset === 'string' ? JSON.parse(emp.roleset) : (emp.roleset || []);
+        setForm({
+          name: emp.name,
+          role: emp.role,           // already a name string from backend
+          roleset: rs,
+          manager_id: emp.manager_id ? String(emp.manager_id) : '',
+        });
       }
-      setManagers(res.data.data.filter((e) => {
-        const rs = typeof e.roleset === 'string' ? JSON.parse(e.roleset) : e.roleset;
+
+      // Managers: users whose roleset includes 'manager' (already name strings)
+      const mgrs = all.filter((e) => {
+        const rs = typeof e.roleset === 'string' ? JSON.parse(e.roleset) : (e.roleset || []);
         return rs.includes('manager');
-      }));
+      });
+      setManagers(mgrs);
+
+      // Find default manager (rahul.verma@company.com)
+      const def = all.find((e) => e.email === 'rahul.verma@company.com');
+      if (def) setDefaultManager(def);
     });
   }, [id]);
 
@@ -29,15 +44,19 @@ export default function AdminEditEmployee() {
       await api.patch(`/admin/employees/${id}`, { name: form.name, role: form.role, roleset: form.roleset });
       await api.patch(`/admin/employees/${id}/manager`, { manager_id: form.manager_id || null });
       toast('success', 'Employee updated successfully');
+      navigate('/admin/employees');
     } catch (err) {
       toast('error', err.response?.data?.message || 'Update failed');
     }
   };
 
+  // Toggle: add if not present, remove if present — no duplicates
   const toggleRole = (role) => {
     setForm((f) => ({
       ...f,
-      roleset: f.roleset.includes(role) ? f.roleset.filter((r) => r !== role) : [...f.roleset, role],
+      roleset: f.roleset.includes(role)
+        ? f.roleset.filter((r) => r !== role)
+        : [...f.roleset, role],
     }));
   };
 
@@ -63,23 +82,38 @@ export default function AdminEditEmployee() {
         <div className="form-group">
           <label>Roles</label>
           <div className="checkbox-group">
-            {['employee','manager','admin'].map((r) => (
+            {['employee', 'manager', 'admin'].map((r) => (
               <label key={r} className="checkbox-label">
-                <input type="checkbox" checked={form.roleset.includes(r)} onChange={() => toggleRole(r)} />
-                {r}
+                <input
+                  type="checkbox"
+                  checked={form.roleset.includes(r)}
+                  onChange={() => toggleRole(r)}
+                />
+                {r.charAt(0).toUpperCase() + r.slice(1)}
               </label>
             ))}
           </div>
         </div>
-        <div className="form-group">
-          <label>Manager</label>
-          <select value={form.manager_id} onChange={(e) => setForm({ ...form, manager_id: e.target.value })}>
-            <option value="">No Manager</option>
-            {managers.map((m) => (
-              <option key={m.id} value={m.id}>{m.name}</option>
-            ))}
-          </select>
-        </div>
+        {form.roleset.includes('employee') && (
+          <div className="form-group">
+            <label>Manager</label>
+            <select value={form.manager_id} onChange={(e) => setForm({ ...form, manager_id: e.target.value })}>
+              <option value="">
+                {defaultManager
+                  ? `Default: ${defaultManager.name} (${defaultManager.email})`
+                  : 'No Manager'}
+              </option>
+              {managers.map((m) => (
+                <option key={m.id} value={String(m.id)}>{m.name} ({m.email})</option>
+              ))}
+            </select>
+            {!form.manager_id && defaultManager && (
+              <small style={{ color: 'var(--text-muted)' }}>
+                No manager assigned — leave requests will go to {defaultManager.name} ({defaultManager.email})
+              </small>
+            )}
+          </div>
+        )}
         <div className="form-actions">
           <button type="submit" className="btn btn-primary">Save Changes</button>
         </div>

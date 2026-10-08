@@ -2,12 +2,13 @@ const router = require('express').Router();
 const { authenticate, authorize } = require('../middleware/auth');
 const {
   getLeaveBalances, getLeaveRequests, createLeaveRequest,
-  cancelLeaveRequest, getLeaveActivities,
+  cancelLeaveRequest, getLeaveActivities, getLeaveDaysPreview,
 } = require('../controllers/leaveController');
 
 router.use(authenticate, authorize('employee', 'manager'));
 
 router.get('/leave-balances', getLeaveBalances);
+router.get('/leave-days-preview', getLeaveDaysPreview);
 router.get('/leave-requests', getLeaveRequests);
 router.post('/leave-requests', createLeaveRequest);
 router.patch('/leave-requests/:id/cancel', cancelLeaveRequest);

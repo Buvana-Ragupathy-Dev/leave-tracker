@@ -28,23 +28,28 @@ export default function AdminEmployees() {
       </div>
       <table className="table">
         <thead>
-          <tr><th>Name</th><th>Email</th><th>Role</th><th>Manager</th><th>Actions</th></tr>
+          <tr><th>Name</th><th>Email</th><th>Role</th><th>Roleset</th><th>Manager</th><th>Actions</th></tr>
         </thead>
         <tbody>
-          {employees.length === 0 && <tr><td colSpan={5} className="text-center">No employees found</td></tr>}
-          {employees.map((e) => (
-            <tr key={e.id}>
-              <td>{e.name}</td>
-              <td>{e.email}</td>
-              <td>{e.role}</td>
-              <td>{e.manager_name || '—'}</td>
-              <td>
-                <button className="btn btn-sm btn-secondary" onClick={() => navigate(`/admin/employees/${e.id}/edit`)}>
-                  Edit
-                </button>
-              </td>
-            </tr>
-          ))}
+          {employees.length === 0 && <tr><td colSpan={6} className="text-center">No employees found</td></tr>}
+          {employees.map((e) => {
+            // backend now returns name strings directly
+            const rs = typeof e.roleset === 'string' ? JSON.parse(e.roleset) : (e.roleset || []);
+            return (
+              <tr key={e.id}>
+                <td>{e.name}</td>
+                <td>{e.email}</td>
+                <td style={{ textTransform: 'capitalize' }}>{e.role}</td>
+                <td style={{ textTransform: 'capitalize' }}>{rs.join(', ') || '—'}</td>
+                <td>{e.manager_name || '—'}</td>
+                <td>
+                  <button className="btn btn-sm btn-secondary" onClick={() => navigate(`/admin/employees/${e.id}/edit`)}>
+                    Edit
+                  </button>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
       <div className="pagination">
