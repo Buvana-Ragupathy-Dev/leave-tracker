@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function Navbar() {
@@ -13,19 +13,19 @@ export default function Navbar() {
       <div className="navbar-links">
         {user?.roleset?.includes('employee') && (
           <>
-            <Link to="/dashboard">Dashboard</Link>
-            <Link to="/apply-leave">Apply Leave</Link>
-            <Link to="/my-requests">My Requests</Link>
+            <NavLink to="/dashboard">Dashboard</NavLink>
+            <NavLink to="/apply-leave">Apply Leave</NavLink>
+            <NavLink to="/my-requests">My Requests</NavLink>
           </>
         )}
         {user?.roleset?.includes('manager') && (
-          <Link to="/manager/requests">Team Requests</Link>
+          <NavLink to="/manager/requests">Team Requests</NavLink>
         )}
         {user?.roleset?.includes('admin') && (
           <>
-            <Link to="/admin/requests">All Requests</Link>
-            <Link to="/admin/employees">Employees</Link>
-            <Link to="/admin/calendar">Calendar</Link>
+            <NavLink to="/admin/requests">All Requests</NavLink>
+            <NavLink to="/admin/employees">Employees</NavLink>
+            <NavLink to="/admin/calendar">Calendar</NavLink>
           </>
         )}
       </div>
