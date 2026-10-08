@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import api from '../../api/client';
 import { toast } from '../../utils/swal';
+import { encryptData } from '../../utils/crypto';
 
 export default function AdminCalendar() {
   const today = new Date();
@@ -25,7 +26,8 @@ export default function AdminCalendar() {
 
   const handleUpdate = async (id) => {
     try {
-      await api.patch(`/admin/calendar/${id}`, editForm);
+      const encId = await encryptData(String(id));
+      await api.patch(`/admin/calendar/${encodeURIComponent(encId)}`, editForm);
       setEditId(null);
       toast('success', 'Calendar entry updated');
       fetchCalendar();

@@ -2,48 +2,50 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../api/client';
 import { toast } from '../../utils/swal';
+import { decryptData } from '../../utils/crypto';
 
 export default function AdminEditEmployee() {
-  const { id } = useParams();
+  const { id } = useParams(); // encrypted id
   const navigate = useNavigate();
   const [form, setForm] = useState({ name: '', role: '', roleset: [], manager_id: '' });
   const [managers, setManagers] = useState([]);
   const [defaultManager, setDefaultManager] = useState(null);
 
   useEffect(() => {
-    api.get('/admin/employees', { params: { limit: 100 } }).then((res) => {
-      const all = res.data.data;
-      const emp = all.find((e) => String(e.id) === String(id));
-      if (emp) {
-        const rs = typeof emp.roleset === 'string' ? JSON.parse(emp.roleset) : (emp.roleset || []);
-        const role = emp.role;
-        const roleset = rs.includes(role) ? rs : [role, ...rs];
-        setForm({
-          name: emp.name,
-          role: emp.role,           // already a name string from backend
-          roleset,
-          manager_id: emp.manager_id ? String(emp.manager_id) : '',
+    (async () => {
+      const rawId = await decryptData(decodeURIComponent(id));
+      api.get('/admin/employees', { params: { limit: 100 } }).then((res) => {
+        const all = res.data.data;
+        const emp = all.find((e) => String(e.id) === rawId);
+        if (emp) {
+          const rs = typeof emp.roleset === 'string' ? JSON.parse(emp.roleset) : (emp.roleset || []);
+          const role = emp.role;
+          const roleset = rs.includes(role) ? rs : [role, ...rs];
+          setForm({
+            name: emp.name,
+            role: emp.role,
+            roleset,
+            manager_id: emp.manager_id ? String(emp.manager_id) : '',
+          });
+        }
+
+        const mgrs = all.filter((e) => {
+          const rs = typeof e.roleset === 'string' ? JSON.parse(e.roleset) : (e.roleset || []);
+          return rs.includes('manager');
         });
-      }
+        setManagers(mgrs);
 
-      // Managers: users whose roleset includes 'manager' (already name strings)
-      const mgrs = all.filter((e) => {
-        const rs = typeof e.roleset === 'string' ? JSON.parse(e.roleset) : (e.roleset || []);
-        return rs.includes('manager');
+        const def = all.find((e) => e.email === 'rahul.verma@company.com');
+        if (def) setDefaultManager(def);
       });
-      setManagers(mgrs);
-
-      // Find default manager (rahul.verma@company.com)
-      const def = all.find((e) => e.email === 'rahul.verma@company.com');
-      if (def) setDefaultManager(def);
-    });
+    })();
   }, [id]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await api.patch(`/admin/employees/${id}`, { name: form.name, role: form.role, roleset: form.roleset });
-      await api.patch(`/admin/employees/${id}/manager`, { manager_id: form.manager_id || null });
+      await api.patch(`/admin/employees/${encodeURIComponent(id)}`, { name: form.name, role: form.role, roleset: form.roleset });
+      await api.patch(`/admin/employees/${encodeURIComponent(id)}/manager`, { manager_id: form.manager_id || null });
       toast('success', 'Employee updated successfully');
       navigate('/admin/employees');
     } catch (err) {

@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const { authenticate, authorize } = require('../middleware/auth');
+const { authenticate, authorize, decryptId } = require('../middleware/auth');
 const {
   getAssignedRequests, getAssignedRequestById, approveRequest, rejectRequest, getRequestActivities,
 } = require('../controllers/managerController');
@@ -7,9 +7,9 @@ const {
 router.use(authenticate, authorize('manager'));
 
 router.get('/leave-requests', getAssignedRequests);
-router.get('/leave-requests/:id', getAssignedRequestById);
-router.patch('/leave-requests/:id/approve', approveRequest);
-router.patch('/leave-requests/:id/reject', rejectRequest);
-router.get('/leave-requests/:id/activities', getRequestActivities);
+router.get('/leave-requests/:id', decryptId, getAssignedRequestById);
+router.patch('/leave-requests/:id/approve', decryptId, approveRequest);
+router.patch('/leave-requests/:id/reject', decryptId, rejectRequest);
+router.get('/leave-requests/:id/activities', decryptId, getRequestActivities);
 
 module.exports = router;

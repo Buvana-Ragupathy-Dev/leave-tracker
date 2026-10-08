@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/client';
+import { encryptData } from '../../utils/crypto';
 
 const STATUS_COLORS = { PENDING: 'badge-warning', APPROVED: 'badge-success', REJECTED: 'badge-danger', CANCELLED: 'badge-secondary' };
 
 export default function AdminRequests() {
   const navigate = useNavigate();
   const [requests, setRequests] = useState([]);
+  const [encIds, setEncIds] = useState({});
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState('');
@@ -20,7 +22,14 @@ export default function AdminRequests() {
     if (statusFilter) params.status = statusFilter;
     if (search) params.search = search;
     api.get('/admin/leave-requests', { params })
-      .then((res) => { setRequests(res.data.data); setTotal(res.data.total); })
+      .then(async (res) => {
+        const data = res.data.data;
+        setRequests(data);
+        setTotal(res.data.total);
+        const map = {};
+        await Promise.all(data.map(async (r) => { map[r.id] = await encryptData(String(r.id)); }));
+        setEncIds(map);
+      })
       .finally(() => setLoading(false));
   }, [page, statusFilter, search]);
 
@@ -58,7 +67,7 @@ export default function AdminRequests() {
               <td>{r.leave_days}</td>
               <td><span className={`badge ${STATUS_COLORS[r.status]}`}>{r.status}</span></td>
               <td>
-                <button className="btn btn-sm btn-secondary" onClick={() => navigate(`/admin/requests/${r.id}`)}>
+                <button className="btn btn-sm btn-secondary" onClick={() => navigate(`/admin/requests/${encodeURIComponent(encIds[r.id])}`)}>
                   View
                 </button>
               </td>

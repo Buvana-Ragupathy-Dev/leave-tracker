@@ -9,7 +9,7 @@ export default function RequestActivity() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get(`/leave-requests/${id}/activities`)
+    api.get(`/leave-requests/${encodeURIComponent(id)}/activities`)
       .then((res) => setActivities(res.data))
       .finally(() => setLoading(false));
   }, [id]);

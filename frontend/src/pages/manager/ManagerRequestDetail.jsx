@@ -13,8 +13,8 @@ export default function ManagerRequestDetail() {
 
   useEffect(() => {
     Promise.all([
-      api.get(`/manager/leave-requests/${id}`),
-      api.get(`/manager/leave-requests/${id}/activities`),
+      api.get(`/manager/leave-requests/${encodeURIComponent(id)}`),
+      api.get(`/manager/leave-requests/${encodeURIComponent(id)}/activities`),
     ]).then(([reqRes, actRes]) => {
       setRequest(reqRes.data);
       setActivities(actRes.data);
@@ -36,7 +36,7 @@ export default function ManagerRequestDetail() {
     });
     if (!isConfirmed) return;
     try {
-      await api.patch(`/manager/leave-requests/${id}/approve`, { remarks: remarks || undefined });
+      await api.patch(`/manager/leave-requests/${encodeURIComponent(id)}/approve`, { remarks: remarks || undefined });
       toast('success', 'Leave request approved');
       navigate('/manager/requests');
     } catch (err) {
@@ -60,7 +60,7 @@ export default function ManagerRequestDetail() {
     });
     if (!isConfirmed) return;
     try {
-      await api.patch(`/manager/leave-requests/${id}/reject`, { rejection_reason });
+      await api.patch(`/manager/leave-requests/${encodeURIComponent(id)}/reject`, { rejection_reason });
       toast('success', 'Leave request rejected');
       navigate('/manager/requests');
     } catch (err) {

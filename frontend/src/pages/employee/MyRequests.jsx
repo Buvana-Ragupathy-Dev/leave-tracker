@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/client';
 import { confirm, toast } from '../../utils/swal';
+import { encryptData } from '../../utils/crypto';
 
 const STATUS_COLORS = { PENDING: 'badge-warning', APPROVED: 'badge-success', REJECTED: 'badge-danger', CANCELLED: 'badge-secondary' };
 
 export default function MyRequests() {
   const navigate = useNavigate();
   const [requests, setRequests] = useState([]);
+  const [encIds, setEncIds] = useState({});
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState('');
@@ -21,17 +23,24 @@ export default function MyRequests() {
     if (statusFilter) params.status = statusFilter;
     if (search) params.search = search;
     api.get('/leave-requests', { params })
-      .then((res) => { setRequests(res.data.data); setTotal(res.data.total); })
+      .then(async (res) => {
+        const data = res.data.data;
+        setRequests(data);
+        setTotal(res.data.total);
+        const map = {};
+        await Promise.all(data.map(async (r) => { map[r.id] = await encryptData(String(r.id)); }));
+        setEncIds(map);
+      })
       .finally(() => setLoading(false));
   };
 
   useEffect(fetchRequests, [page, statusFilter, search]);
 
-  const handleCancel = async (id) => {
+  const handleCancel = async (id, encId) => {
     const result = await confirm('This will cancel your leave request.');
     if (!result.isConfirmed) return;
     try {
-      await api.patch(`/leave-requests/${id}/cancel`);
+      await api.patch(`/leave-requests/${encodeURIComponent(encId)}/cancel`);
       toast('success', 'Leave request cancelled');
       fetchRequests();
     } catch (err) {
@@ -75,11 +84,11 @@ export default function MyRequests() {
               <td>{r.leave_days}</td>
               <td><span className={`badge ${STATUS_COLORS[r.status]}`}>{r.status}</span></td>
               <td>
-                <button className="btn btn-sm btn-secondary" onClick={() => navigate(`/my-requests/${r.id}/activity`)}>
+                <button className="btn btn-sm btn-secondary" onClick={() => navigate(`/my-requests/${encodeURIComponent(encIds[r.id])}/activity`)}>
                   Activity
                 </button>
                 {r.status === 'PENDING' && (
-                  <button className="btn btn-sm btn-danger" onClick={() => handleCancel(r.id)}>Cancel</button>
+                  <button className="btn btn-sm btn-danger" onClick={() => handleCancel(r.id, encIds[r.id])}>Cancel</button>
                 )}
               </td>
             </tr>

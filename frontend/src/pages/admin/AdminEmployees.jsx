@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/client';
+import { encryptData } from '../../utils/crypto';
 
 export default function AdminEmployees() {
   const navigate = useNavigate();
   const [employees, setEmployees] = useState([]);
+  const [encIds, setEncIds] = useState({});
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
@@ -14,7 +16,14 @@ export default function AdminEmployees() {
     const params = { page, limit };
     if (search) params.search = search;
     api.get('/admin/employees', { params })
-      .then((res) => { setEmployees(res.data.data); setTotal(res.data.total); });
+      .then(async (res) => {
+        const data = res.data.data;
+        setEmployees(data);
+        setTotal(res.data.total);
+        const map = {};
+        await Promise.all(data.map(async (e) => { map[e.id] = await encryptData(String(e.id)); }));
+        setEncIds(map);
+      });
   }, [page, search]);
 
   return (
@@ -43,7 +52,7 @@ export default function AdminEmployees() {
                 <td style={{ textTransform: 'capitalize' }}>{rs.join(', ') || '—'}</td>
                 <td>{e.manager_name || '—'}</td>
                 <td>
-                  <button className="btn btn-sm btn-secondary" onClick={() => navigate(`/admin/employees/${e.id}/edit`)}>
+                  <button className="btn btn-sm btn-secondary" onClick={() => navigate(`/admin/employees/${encodeURIComponent(encIds[e.id])}/edit`)}>
                     Edit
                   </button>
                 </td>

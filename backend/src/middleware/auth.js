@@ -1,4 +1,14 @@
 const jwt = require('jsonwebtoken');
+const { decrypt } = require('../utils/crypto');
+
+function decryptId(req, res, next) {
+  try {
+    if (req.params.id) req.params.id = decrypt(decodeURIComponent(req.params.id));
+    next();
+  } catch {
+    res.status(400).json({ message: 'Invalid resource identifier' });
+  }
+}
 
 function authenticate(req, res, next) {
   const header = req.headers.authorization;
@@ -20,4 +30,4 @@ function authorize(...roles) {
   };
 }
 
-module.exports = { authenticate, authorize };
+module.exports = { authenticate, authorize, decryptId };

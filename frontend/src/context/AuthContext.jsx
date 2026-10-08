@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import api from '../api/client';
+import { encryptData } from '../utils/crypto';
 
 const AuthContext = createContext(null);
 
@@ -26,7 +27,8 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = async (email, password) => {
-    const { data } = await api.post('/auth/login', { email, password });
+    const encryptedPassword = await encryptData(password);
+    const { data } = await api.post('/auth/login', { email, password: encryptedPassword });
     localStorage.setItem('token', data.token);
     setUser(data.user);
     setActiveRole(defaultRole(data.user));

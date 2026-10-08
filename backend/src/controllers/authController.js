@@ -1,10 +1,18 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../config/db');
+const { decrypt } = require('../utils/crypto');
 
 async function login(req, res) {
-  const { email, password } = req.body;
-  if (!email || !password) return res.status(400).json({ message: 'Email and password required' });
+  const { email, password: encryptedPassword } = req.body;
+  if (!email || !encryptedPassword) return res.status(400).json({ message: 'Email and password required' });
+
+  let password;
+  try {
+    password = decrypt(encryptedPassword);
+  } catch {
+    return res.status(400).json({ message: 'Invalid request payload' });
+  }
 
   const [[user]] = await db.query(
     'SELECT id, name, email, password, role, roleset, manager_id FROM users WHERE email = ? AND deleted_at IS NULL',

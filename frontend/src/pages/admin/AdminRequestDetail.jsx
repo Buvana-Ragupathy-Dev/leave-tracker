@@ -10,8 +10,8 @@ export default function AdminRequestDetail() {
 
   useEffect(() => {
     Promise.all([
-      api.get(`/admin/leave-requests/${id}`),
-      api.get(`/admin/leave-requests/${id}/activities`),
+      api.get(`/admin/leave-requests/${encodeURIComponent(id)}`),
+      api.get(`/admin/leave-requests/${encodeURIComponent(id)}/activities`),
     ]).then(([reqRes, actRes]) => {
       setRequest(reqRes.data);
       setActivities(actRes.data);

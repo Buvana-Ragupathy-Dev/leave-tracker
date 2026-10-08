@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const { authenticate, authorize } = require('../middleware/auth');
+const { authenticate, authorize, decryptId } = require('../middleware/auth');
 const {
   getLeaveBalances, getLeaveRequests, createLeaveRequest,
   cancelLeaveRequest, getLeaveActivities, getLeaveDaysPreview,
@@ -11,7 +11,7 @@ router.get('/leave-balances', getLeaveBalances);
 router.get('/leave-days-preview', getLeaveDaysPreview);
 router.get('/leave-requests', getLeaveRequests);
 router.post('/leave-requests', createLeaveRequest);
-router.patch('/leave-requests/:id/cancel', cancelLeaveRequest);
-router.get('/leave-requests/:id/activities', getLeaveActivities);
+router.patch('/leave-requests/:id/cancel', decryptId, cancelLeaveRequest);
+router.get('/leave-requests/:id/activities', decryptId, getLeaveActivities);
 
 module.exports = router;
