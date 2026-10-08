@@ -11,7 +11,6 @@ import RequestActivity from './pages/employee/RequestActivity';
 
 import ManagerRequests from './pages/manager/ManagerRequests';
 import ManagerRequestDetail from './pages/manager/ManagerRequestDetail';
-import ApprovedTickets from './pages/manager/ApprovedTickets';
 
 import AdminRequests from './pages/admin/AdminRequests';
 import AdminRequestDetail from './pages/admin/AdminRequestDetail';
@@ -23,7 +22,6 @@ import AdminCalendar from './pages/admin/AdminCalendar';
 const ROUTE_ROLE_MAP = [
   { prefix: '/admin/', role: 'admin' },
   { prefix: '/manager/requests', role: 'manager', activeLink: '/manager/requests' },
-  { prefix: '/manager/approved-tickets', role: 'manager', activeLink: '/manager/approved-tickets' },
   { prefix: '/manager/', role: 'manager' },
   { prefix: '/dashboard', role: 'employee' },
   { prefix: '/apply-leave', role: 'employee' },
@@ -60,7 +58,6 @@ function AppRoutes() {
         {/* Manager */}
         <Route path="/manager/requests" element={<ProtectedRoute roles={['manager']}><ManagerRequests /></ProtectedRoute>} />
         <Route path="/manager/requests/:id" element={<ProtectedRoute roles={['manager']}><ManagerRequestDetail /></ProtectedRoute>} />
-        <Route path="/manager/approved-tickets" element={<ProtectedRoute roles={['manager']}><ApprovedTickets /></ProtectedRoute>} />
 
         {/* Admin */}
         <Route path="/admin/requests" element={<ProtectedRoute roles={['admin']}><AdminRequests /></ProtectedRoute>} />

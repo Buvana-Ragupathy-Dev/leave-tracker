@@ -27,32 +27,6 @@ async function getAssignedRequests(req, res) {
   res.json({ data: rows, total, page: Number(page), limit: Number(limit) });
 }
 
-async function getApprovedTickets(req, res) {
-  const { search, page = 1, limit = 10 } = req.query;
-  const offset = (page - 1) * limit;
-  const params = [req.user.id];
-  let where = `lr.reviewed_by = ? AND lr.status = 'APPROVED'`;
-  if (search) { where += ' AND (u.name LIKE ? OR lr.ticket_number LIKE ?)'; params.push(`%${search}%`, `%${search}%`); }
-
-  const [rows] = await db.query(
-    `SELECT lr.id, lr.ticket_number, u.name AS employee_name, lt.name AS leave_type,
-            lr.start_date, lr.end_date, lr.leave_days, lr.status, lr.reviewed_at
-     FROM leave_requests lr
-     JOIN users u ON u.id = lr.user_id
-     JOIN leave_types lt ON lt.id = lr.leave_type_id
-     WHERE ${where}
-     ORDER BY lr.reviewed_at DESC
-     LIMIT ? OFFSET ?`,
-    [...params, Number(limit), Number(offset)]
-  );
-  const [[{ total }]] = await db.query(
-    `SELECT COUNT(*) AS total FROM leave_requests lr
-     JOIN users u ON u.id = lr.user_id
-     WHERE ${where}`, params
-  );
-  res.json({ data: rows, total, page: Number(page), limit: Number(limit) });
-}
-
 async function getAssignedRequestById(req, res) {
   const { id } = req.params;
   const [[lr]] = await db.query(
@@ -129,4 +103,4 @@ async function rejectRequest(req, res) {
   res.json({ message: 'Leave request rejected' });
 }
 
-module.exports = { getAssignedRequests, getApprovedTickets, getAssignedRequestById, approveRequest, rejectRequest };
+module.exports = { getAssignedRequests, getAssignedRequestById, approveRequest, rejectRequest };

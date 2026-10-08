@@ -37,7 +37,6 @@ export default function Navbar({ routeRole, activeLink }) {
         {displayRole === 'manager' && (
           <>
             <NavLink to="/manager/requests" end className={linkClass('/manager/requests')}>Team Requests</NavLink>
-            <NavLink to="/manager/approved-tickets" className={linkClass('/manager/approved-tickets')}>Approved Tickets</NavLink>
           </>
         )}
         {displayRole === 'admin' && (
