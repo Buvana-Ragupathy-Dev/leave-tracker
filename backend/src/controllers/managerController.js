@@ -4,7 +4,7 @@ async function getAssignedRequests(req, res) {
   const { status, search, page = 1, limit = 10 } = req.query;
   const offset = (page - 1) * limit;
   const params = [req.user.id];
-  let where = 'lr.assigned_manager_id = ?';
+  let where = "lr.assigned_manager_id = ? AND lr.status != 'CANCELLED'";
   if (status) { where += ' AND lr.status = ?'; params.push(status); }
   if (search) { where += ' AND (u.name LIKE ? OR lr.ticket_number LIKE ?)'; params.push(`%${search}%`, `%${search}%`); }
 

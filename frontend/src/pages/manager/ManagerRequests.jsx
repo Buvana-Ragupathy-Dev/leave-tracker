@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/client';
 
-const STATUS_COLORS = { PENDING: 'badge-warning', APPROVED: 'badge-success', REJECTED: 'badge-danger', CANCELLED: 'badge-secondary' };
+const STATUS_COLORS = { PENDING: 'badge-warning', APPROVED: 'badge-success', REJECTED: 'badge-danger' };
 
 export default function ManagerRequests() {
   const navigate = useNavigate();
@@ -35,7 +35,7 @@ export default function ManagerRequests() {
         />
         <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}>
           <option value="">All Statuses</option>
-          {['PENDING','APPROVED','REJECTED','CANCELLED'].map((s) => (
+          {['PENDING','APPROVED','REJECTED'].map((s) => (
             <option key={s} value={s}>{s}</option>
           ))}
         </select>
