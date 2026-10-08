@@ -7,8 +7,10 @@ export default function ManagerRequestDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [request, setRequest] = useState(null);
+  const [approveRemarks, setApproveRemarks] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
   const [showRejectForm, setShowRejectForm] = useState(false);
+  const [showApproveForm, setShowApproveForm] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -17,11 +19,12 @@ export default function ManagerRequestDetail() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  const handleApprove = async () => {
+  const handleApprove = async (e) => {
+    e.preventDefault();
     const result = await confirm('This will approve the leave request and deduct the balance.');
     if (!result.isConfirmed) return;
     try {
-      await api.patch(`/manager/leave-requests/${id}/approve`);
+      await api.patch(`/manager/leave-requests/${id}/approve`, { remarks: approveRemarks || undefined });
       toast('success', 'Leave request approved');
       navigate('/manager/requests');
     } catch (err) {
@@ -55,20 +58,32 @@ export default function ManagerRequestDetail() {
         <div className="detail-row"><label>From</label><span>{request.start_date?.slice(0,10)}</span></div>
         <div className="detail-row"><label>To</label><span>{request.end_date?.slice(0,10)}</span></div>
         <div className="detail-row"><label>Working Days</label><span>{request.leave_days}</span></div>
-        <div className="detail-row"><label>Status</label><span className="badge badge-warning">{request.status}</span></div>
+        <div className="detail-row"><label>Status</label><span className={`badge ${request.status === 'PENDING' ? 'badge-warning' : request.status === 'APPROVED' ? 'badge-success' : 'badge-danger'}`}>{request.status}</span></div>
         <div className="detail-row"><label>Reason</label><span>{request.reason}</span></div>
       </div>
+
       {request.status === 'PENDING' && (
         <div className="action-buttons">
-          <button className="btn btn-success" onClick={handleApprove}>Approve</button>
-          <button className="btn btn-danger" onClick={() => setShowRejectForm(!showRejectForm)}>Reject</button>
+          <button className="btn btn-success" onClick={() => { setShowApproveForm(!showApproveForm); setShowRejectForm(false); }}>Approve</button>
+          <button className="btn btn-danger" onClick={() => { setShowRejectForm(!showRejectForm); setShowApproveForm(false); }}>Reject</button>
         </div>
       )}
+
+      {showApproveForm && (
+        <form onSubmit={handleApprove} className="form-card">
+          <div className="form-group">
+            <label>Remarks <small>(optional)</small></label>
+            <textarea rows={3} value={approveRemarks} onChange={(e) => setApproveRemarks(e.target.value)} placeholder="Add any remarks..." />
+          </div>
+          <button type="submit" className="btn btn-success">Confirm Approval</button>
+        </form>
+      )}
+
       {showRejectForm && (
         <form onSubmit={handleReject} className="form-card">
           <div className="form-group">
-            <label>Rejection Reason</label>
-            <textarea required rows={3} value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} />
+            <label>Rejection Reason <small>(required)</small></label>
+            <textarea required rows={3} value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} placeholder="State the reason for rejection..." />
           </div>
           <button type="submit" className="btn btn-danger">Confirm Rejection</button>
         </form>

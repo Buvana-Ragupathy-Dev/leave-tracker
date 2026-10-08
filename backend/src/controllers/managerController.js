@@ -1,11 +1,12 @@
 const db = require('../config/db');
 
 async function getAssignedRequests(req, res) {
-  const { status, page = 1, limit = 10 } = req.query;
+  const { status, search, page = 1, limit = 10 } = req.query;
   const offset = (page - 1) * limit;
   const params = [req.user.id];
   let where = 'lr.assigned_manager_id = ?';
   if (status) { where += ' AND lr.status = ?'; params.push(status); }
+  if (search) { where += ' AND (u.name LIKE ? OR lr.ticket_number LIKE ?)'; params.push(`%${search}%`, `%${search}%`); }
 
   const [rows] = await db.query(
     `SELECT lr.id, lr.ticket_number, u.name AS employee_name, lt.name AS leave_type,
@@ -20,6 +21,32 @@ async function getAssignedRequests(req, res) {
   );
   const [[{ total }]] = await db.query(
     `SELECT COUNT(*) AS total FROM leave_requests lr WHERE ${where}`, params
+  );
+  res.json({ data: rows, total, page: Number(page), limit: Number(limit) });
+}
+
+async function getApprovedTickets(req, res) {
+  const { search, page = 1, limit = 10 } = req.query;
+  const offset = (page - 1) * limit;
+  const params = [req.user.id];
+  let where = `lr.reviewed_by = ? AND lr.status = 'APPROVED'`;
+  if (search) { where += ' AND (u.name LIKE ? OR lr.ticket_number LIKE ?)'; params.push(`%${search}%`, `%${search}%`); }
+
+  const [rows] = await db.query(
+    `SELECT lr.id, lr.ticket_number, u.name AS employee_name, lt.name AS leave_type,
+            lr.start_date, lr.end_date, lr.leave_days, lr.status, lr.reviewed_at
+     FROM leave_requests lr
+     JOIN users u ON u.id = lr.user_id
+     JOIN leave_types lt ON lt.id = lr.leave_type_id
+     WHERE ${where}
+     ORDER BY lr.reviewed_at DESC
+     LIMIT ? OFFSET ?`,
+    [...params, Number(limit), Number(offset)]
+  );
+  const [[{ total }]] = await db.query(
+    `SELECT COUNT(*) AS total FROM leave_requests lr
+     JOIN users u ON u.id = lr.user_id
+     WHERE ${where}`, params
   );
   res.json({ data: rows, total, page: Number(page), limit: Number(limit) });
 }
@@ -49,6 +76,8 @@ async function approveRequest(req, res) {
   if (lr.user_id === req.user.id) return res.status(403).json({ message: 'Cannot approve your own leave request' });
   if (lr.status !== 'PENDING') return res.status(409).json({ message: `Request is already ${lr.status}` });
 
+  const { remarks } = req.body;
+
   const conn = await db.getConnection();
   try {
     await conn.beginTransaction();
@@ -61,8 +90,8 @@ async function approveRequest(req, res) {
       [lr.leave_days, lr.user_id, lr.leave_type_id]
     );
     await conn.query(
-      `INSERT INTO leave_activities (leave_request_id, action, performed_by) VALUES (?, 'APPROVED', ?)`,
-      [id, req.user.id]
+      `INSERT INTO leave_activities (leave_request_id, action, performed_by, remarks) VALUES (?, 'APPROVED', ?, ?)`,
+      [id, req.user.id, remarks || null]
     );
     await conn.commit();
     res.json({ message: 'Leave request approved' });
@@ -98,4 +127,4 @@ async function rejectRequest(req, res) {
   res.json({ message: 'Leave request rejected' });
 }
 
-module.exports = { getAssignedRequests, getAssignedRequestById, approveRequest, rejectRequest };
+module.exports = { getAssignedRequests, getApprovedTickets, getAssignedRequestById, approveRequest, rejectRequest };

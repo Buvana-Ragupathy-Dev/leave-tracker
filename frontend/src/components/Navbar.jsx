@@ -19,7 +19,10 @@ export default function Navbar() {
           </>
         )}
         {user?.roleset?.includes('manager') && (
-          <NavLink to="/manager/requests">Team Requests</NavLink>
+          <>
+            <NavLink to="/manager/requests">Team Requests</NavLink>
+            <NavLink to="/manager/approved-tickets">Approved Tickets</NavLink>
+          </>
         )}
         {user?.roleset?.includes('admin') && (
           <>

@@ -78,7 +78,18 @@ async function createLeaveRequest(req, res) {
   const [[emp]] = await db.query('SELECT manager_id FROM users WHERE id = ?', [req.user.id]);
   const assigned_manager_id = emp?.manager_id ?? null;
 
-  const ticket_number = `LV-${Date.now()}`;
+  // Generate ticket: e.g. CL-05/2026-00000001
+  const [[lt]] = await db.query('SELECT name FROM leave_types WHERE id = ?', [leave_type_id]);
+  const prefix = lt.name.split(' ').map(w => w[0]).join('').toUpperCase(); // CL, SL, EL
+  const now = new Date();
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const yyyy = now.getFullYear();
+  const [[{ seq }]] = await db.query(
+    `SELECT COUNT(*) + 1 AS seq FROM leave_requests
+     WHERE leave_type_id = ? AND MONTH(created_at) = ? AND YEAR(created_at) = ?`,
+    [leave_type_id, mm, yyyy]
+  );
+  const ticket_number = `${prefix}-${mm}/${yyyy}-${String(seq).padStart(8, '0')}`;
 
   const conn = await db.getConnection();
   try {
