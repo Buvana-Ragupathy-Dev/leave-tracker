@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../../api/client';
+import { toast } from '../../utils/swal';
 
 export default function AdminCalendar() {
   const today = new Date();
@@ -9,7 +10,6 @@ export default function AdminCalendar() {
   const [editId, setEditId] = useState(null);
   const [editForm, setEditForm] = useState({ is_working_day: 1, description: '' });
   const [newEntry, setNewEntry] = useState({ calendar_date: '', is_working_day: 0, description: '' });
-  const [error, setError] = useState('');
 
   const fetchCalendar = () => {
     api.get('/admin/calendar', { params: { year, month } })
@@ -27,21 +27,22 @@ export default function AdminCalendar() {
     try {
       await api.patch(`/admin/calendar/${id}`, editForm);
       setEditId(null);
+      toast('success', 'Calendar entry updated');
       fetchCalendar();
     } catch (err) {
-      setError(err.response?.data?.message || 'Update failed');
+      toast('error', err.response?.data?.message || 'Update failed');
     }
   };
 
   const handleCreate = async (e) => {
     e.preventDefault();
-    setError('');
     try {
       await api.post('/admin/calendar', newEntry);
       setNewEntry({ calendar_date: '', is_working_day: 0, description: '' });
+      toast('success', 'Calendar entry saved');
       fetchCalendar();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to create entry');
+      toast('error', err.response?.data?.message || 'Failed to create entry');
     }
   };
 
@@ -79,7 +80,6 @@ export default function AdminCalendar() {
           {months.map((m, i) => <option key={i+1} value={i+1}>{m}</option>)}
         </select>
       </div>
-      {error && <p className="error">{error}</p>}
       <table className="table">
         <thead>
           <tr><th>Date</th><th>Day</th><th>Working Day</th><th>Description</th><th>Actions</th></tr>

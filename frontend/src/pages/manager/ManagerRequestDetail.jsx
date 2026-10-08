@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../api/client';
+import { confirm, toast } from '../../utils/swal';
 
 export default function ManagerRequestDetail() {
   const { id } = useParams();
@@ -8,7 +9,6 @@ export default function ManagerRequestDetail() {
   const [request, setRequest] = useState(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [showRejectForm, setShowRejectForm] = useState(false);
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -18,12 +18,14 @@ export default function ManagerRequestDetail() {
   }, [id]);
 
   const handleApprove = async () => {
-    if (!window.confirm('Approve this leave request?')) return;
+    const result = await confirm('This will approve the leave request and deduct the balance.');
+    if (!result.isConfirmed) return;
     try {
       await api.patch(`/manager/leave-requests/${id}/approve`);
+      toast('success', 'Leave request approved');
       navigate('/manager/requests');
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to approve');
+      toast('error', err.response?.data?.message || 'Failed to approve');
     }
   };
 
@@ -31,9 +33,10 @@ export default function ManagerRequestDetail() {
     e.preventDefault();
     try {
       await api.patch(`/manager/leave-requests/${id}/reject`, { rejection_reason: rejectionReason });
+      toast('success', 'Leave request rejected');
       navigate('/manager/requests');
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to reject');
+      toast('error', err.response?.data?.message || 'Failed to reject');
     }
   };
 
@@ -55,7 +58,6 @@ export default function ManagerRequestDetail() {
         <div className="detail-row"><label>Status</label><span className="badge badge-warning">{request.status}</span></div>
         <div className="detail-row"><label>Reason</label><span>{request.reason}</span></div>
       </div>
-      {error && <p className="error">{error}</p>}
       {request.status === 'PENDING' && (
         <div className="action-buttons">
           <button className="btn btn-success" onClick={handleApprove}>Approve</button>

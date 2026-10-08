@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/client';
+import { confirm, toast } from '../../utils/swal';
 
 const STATUS_COLORS = { PENDING: 'badge-warning', APPROVED: 'badge-success', REJECTED: 'badge-danger', CANCELLED: 'badge-secondary' };
 
@@ -25,12 +26,14 @@ export default function MyRequests() {
   useEffect(fetchRequests, [page, statusFilter]);
 
   const handleCancel = async (id) => {
-    if (!window.confirm('Cancel this leave request?')) return;
+    const result = await confirm('This will cancel your leave request.');
+    if (!result.isConfirmed) return;
     try {
       await api.patch(`/leave-requests/${id}/cancel`);
+      toast('success', 'Leave request cancelled');
       fetchRequests();
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to cancel');
+      toast('error', err.response?.data?.message || 'Failed to cancel');
     }
   };
 

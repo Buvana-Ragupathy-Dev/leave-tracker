@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../api/client';
+import { toast } from '../../utils/swal';
 
 export default function AdminEditEmployee() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [form, setForm] = useState({ name: '', role: '', roleset: [], manager_id: '' });
   const [managers, setManagers] = useState([]);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     api.get('/admin/employees', { params: { limit: 100 } }).then((res) => {
@@ -26,13 +25,12 @@ export default function AdminEditEmployee() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(''); setSuccess('');
     try {
       await api.patch(`/admin/employees/${id}`, { name: form.name, role: form.role, roleset: form.roleset });
       await api.patch(`/admin/employees/${id}/manager`, { manager_id: form.manager_id || null });
-      setSuccess('Employee updated successfully');
+      toast('success', 'Employee updated successfully');
     } catch (err) {
-      setError(err.response?.data?.message || 'Update failed');
+      toast('error', err.response?.data?.message || 'Update failed');
     }
   };
 
@@ -82,8 +80,6 @@ export default function AdminEditEmployee() {
             ))}
           </select>
         </div>
-        {error && <p className="error">{error}</p>}
-        {success && <p className="success">{success}</p>}
         <div className="form-actions">
           <button type="submit" className="btn btn-primary">Save Changes</button>
         </div>

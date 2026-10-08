@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/client';
+import { toast } from '../../utils/swal';
 
 const LEAVE_TYPES = [
   { id: 1, name: 'Casual Leave' },
@@ -33,7 +34,7 @@ export default function ApplyLeave() {
         ...form,
         leave_type_id: Number(form.leave_type_id),
       });
-      setSuccess(`Leave request submitted. Ticket: ${res.data.ticket_number} (${res.data.leave_days} working days)`);
+      toast('success', `Ticket ${res.data.ticket_number} submitted — ${res.data.leave_days} working days`);
       setForm({ leave_type_id: '', start_date: '', end_date: '', reason: '' });
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to submit request');
@@ -73,7 +74,6 @@ export default function ApplyLeave() {
           <textarea required rows={3} value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })} />
         </div>
         {error && <p className="error">{error}</p>}
-        {success && <p className="success">{success}</p>}
         <div className="form-actions">
           <button type="button" className="btn btn-secondary" onClick={() => navigate('/my-requests')}>Cancel</button>
           <button type="submit" className="btn btn-primary" disabled={loading}>
